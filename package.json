@@ -1,0 +1,9 @@
+{
+  "name": "timeledger",
+  "private": true,
+  "type": "module",
+  "description": "Evidence-first freelance time, approval and earnings tracker. No build step, no dependencies.",
+  "scripts": {
+    "test": "node --test tests/*.test.js"
+  }
+}

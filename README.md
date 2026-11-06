@@ -90,7 +90,7 @@ Rates come from Frankfurter (ECB reference rates) with ExchangeRate-API's open e
 
 ## Performance notes
 
-- No framework or bundle: ~100 KB of uncompressed JS total, each screen loaded on demand.
+- No framework or bundle: about 220 KB of uncompressed, unminified JS in total, and each screen's module is only loaded when you open it.
 - All records are read from IndexedDB once at startup; screens render synchronously from memory and store writes are batched into one render per frame.
 - Clocks and timers update text nodes once a second without re-rendering.
 - Evidence thumbnails are generated once at upload; full files are only read when opened.

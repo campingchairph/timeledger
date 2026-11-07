@@ -19,6 +19,18 @@ export const mount = (el, tpl) => { el.innerHTML = tpl.s ?? tpl; return el; };
 export const $ = (sel, root = document) => root.querySelector(sel);
 export const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 
+// ---------- icons (inline SVG, inherit currentColor) ----------
+
+const ICONS = {
+  clip: 'M21 11l-8.6 8.6a5 5 0 0 1-7.1-7.1l8.6-8.6a3.3 3.3 0 0 1 4.7 4.7l-8.6 8.6a1.7 1.7 0 0 1-2.4-2.4L15.5 7',
+  edit: 'M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z',
+  trash: 'M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14',
+  play: 'M7 4.5v15l12-7.5z',
+  arrow: 'M5 12h14M13 6l6 6-6 6',
+  check: 'M5 12.5l4.5 4.5L19 7',
+};
+export const icon = name => raw(`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${ICONS[name]}"/></svg>`);
+
 // ---------- small renderers ----------
 
 export const badge = (text, kind = '') => h`<span class="badge ${kind}">${text}</span>`;

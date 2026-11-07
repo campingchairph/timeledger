@@ -1,5 +1,5 @@
 import { S, get, today, scopeContractIds, contractLabel, save, homeTz } from '../store.js';
-import { h, mount, empty, badge, openDialog, table } from '../ui.js';
+import { h, mount, empty, badge, openDialog, table, icon } from '../ui.js';
 import * as C from '../calc.js';
 import * as A from '../actions.js';
 import { fmtDateTime } from '../tz.js';
@@ -33,7 +33,7 @@ export function render(el) {
             ${x.due_at ? h`<span class="${x.due_at < t && OPEN(x.status) ? 'badge bad' : ''}">Due ${C.fmtDate(x.due_at)}</span>` : ''}<span>${C.fmtMinutesDec(mins)} logged</span></div></div>
         <div class="item-side">
           <select data-status="${x.id}" aria-label="Status" style="width:auto;font-size:12px;padding:4px 6px">${A.TASK_STATUSES.map(s => h`<option ${s === x.status ? h`selected` : ''}>${s}</option>`)}</select>
-          <div class="item-actions mt"><button class="icon-btn" data-timer="${x.id}" title="Start timer">▶</button><button class="icon-btn" data-edit="${x.id}" title="Edit">✎</button></div>
+          <div class="item-actions mt"><button class="icon-btn" data-timer="${x.id}" title="Start timer" aria-label="Start timer">${icon('play')}</button><button class="icon-btn" data-edit="${x.id}" title="Edit" aria-label="Edit">${icon('edit')}</button></div>
         </div></div>`;
     })}</div>` : empty(filter === 'open' ? 'No open tasks. Create one when work is assigned.' : 'No tasks match.', h`<button class="btn primary" data-new>New task</button>`)}
   </section>`);

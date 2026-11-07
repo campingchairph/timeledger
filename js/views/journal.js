@@ -1,5 +1,5 @@
 import { S, get, today, profile, homeTz, scopeContractIds, contractLabel, settings, updateSettings } from '../store.js';
-import { h, mount, empty, badge } from '../ui.js';
+import { h, mount, empty, badge, icon } from '../ui.js';
 import * as C from '../calc.js';
 import * as M from '../metrics.js';
 import * as A from '../actions.js';
@@ -26,14 +26,14 @@ function calendar(cids, t) {
     <div class="cal">${['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => h`<div class="dow">${d}</div>`)}
       ${days.map(d => h`<button data-d="${d}" class="${d.slice(0, 7) !== month ? 'out' : ''} ${d === t ? 'today' : ''} ${d === sel ? 'sel' : ''}" aria-label="${C.fmtDate(d)}">
         <span class="d">${+d.slice(8)}</span>
-        ${logged.has(d) ? h`<span class="m">⏱ ${C.hundredthsToString(C.minutesToCenti(logged.get(d)))}</span>` : ''}
-        ${approved.has(d) ? h`<span class="m ap">✓ ${C.hundredthsToString(approved.get(d))}</span>` : pending.has(d) ? h`<span class="m pd">… pending</span>` : ''}
-        ${evidence.has(d) ? h`<span class="m">📎 files</span>` : ''}
-        ${due.has(d) ? h`<span class="m dl">⚑ due</span>` : ''}
-        ${money.has(d) ? h`<span class="m">◆ inv/pay</span>` : ''}
+        ${logged.has(d) ? h`<span class="m lg">${C.hundredthsToString(C.minutesToCenti(logged.get(d)))}</span>` : ''}
+        ${approved.has(d) ? h`<span class="m ap">${C.hundredthsToString(approved.get(d))}</span>` : pending.has(d) ? h`<span class="m pd">pending</span>` : ''}
+        ${evidence.has(d) ? h`<span class="m ev">files</span>` : ''}
+        ${due.has(d) ? h`<span class="m dl">due</span>` : ''}
+        ${money.has(d) ? h`<span class="m iv">inv/pay</span>` : ''}
       </button>`)}
     </div>
-    <p class="small muted mt">⏱ logged · ✓ approved (single-day approvals) · … no approval covering the day · 📎 evidence · ⚑ task due · ◆ invoice/payment date</p>`;
+    <div class="cal-legend">${[['logged', 'Logged h'], ['approved', 'Approved h'], ['warn', 'No approval yet'], ['paid', 'Evidence'], ['bad', 'Task due'], ['invoiced', 'Invoice / payment']].map(([c, l]) => h`<span><i style="background:var(--${c})"></i>${l}</span>`)}</div>`;
 }
 
 function closeout(cid, d) {
@@ -95,11 +95,11 @@ export function render(el, params) {
                   ${e.task_id ? h`<span>Task: ${get('tasks', e.task_id)?.title}</span>` : ''}
                   ${e.category ? h`<span>${e.category}</span>` : ''}
                   ${e.source === 'timer' ? badge('Timer') : ''}${e.is_billable === false ? badge('Non-billable') : ''}
-                  ${ov.length ? badge('Overlap', 'warn') : ''}${evN ? h`<span>📎 ${evN}</span>` : ''}</div>
+                  ${ov.length ? badge('Overlap', 'warn') : ''}${evN ? badge(`${evN} file${evN > 1 ? 's' : ''}`) : ''}</div>
                 ${e.deliverable_notes ? h`<div class="small mt">Deliverable: ${e.deliverable_notes}</div>` : ''}
               </div>
               <div class="item-side"><div class="num"><b>${C.fmtMinutesDec(e.duration_minutes)}</b></div><div class="small muted">${C.fmtHM(e.duration_minutes)}</div>
-                <div class="item-actions"><button class="icon-btn" data-attach="${e.id}" title="Attach file">📎</button><button class="icon-btn" data-edit="${e.id}" title="Edit">✎</button><button class="icon-btn" data-del="${e.id}" title="Delete">🗑</button></div></div>
+                <div class="item-actions"><button class="icon-btn" data-attach="${e.id}" title="Attach file" aria-label="Attach file">${icon('clip')}</button><button class="icon-btn" data-edit="${e.id}" title="Edit" aria-label="Edit">${icon('edit')}</button><button class="icon-btn" data-del="${e.id}" title="Delete" aria-label="Delete">${icon('trash')}</button></div></div>
             </div>`;
           }) : empty('No entries for this day.')}
         </div>

@@ -47,6 +47,7 @@ async function route() {
     v.onclick = v.onchange = v.oninput = v.onkeydown = null;
   }
   current = { name, mod };
+  document.body.dataset.route = name;
   $$('[data-route]').forEach(a => a.classList.toggle('active', a.dataset.route === name));
   $('#more-btn')?.classList.toggle('active', !MOBILE_TABS.includes(name));
   const label = ROUTES.find(r => r[0] === name)[1];

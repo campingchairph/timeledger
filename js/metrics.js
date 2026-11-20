@@ -49,7 +49,7 @@ export function finance(cids, from, to) {
   }
   const invoiced = {}, paid = {}, outstanding = {};
   for (const inv of S.invoices) {
-    if (!cids.has(inv.contract_id) || !inR(inv.invoice_date, from, to) || !C.invoiceCountsAsBilled(inv) || inv.status === 'Draft') continue;
+    if (!cids.has(inv.contract_id) || !inR(inv.invoice_date, from, to) || !C.invoiceIssued(inv)) continue;
     C.addTo(invoiced, inv.currency, C.invoiceTotal(inv));
     const p = C.invoicePaid(inv, S.payments);
     C.addTo(paid, inv.currency, p);
@@ -71,6 +71,16 @@ export function periodStatus(cid, from, to) {
   else if (apps.length) status = 'Partially approved';
   else if (subs.length) status = 'Submitted — awaiting approval';
   return { status, submitted, approved, subs, apps, ...C.pendingDifference(submitted, approved) };
+}
+
+// "Timesheets up to date": every day with billable logged time is covered by a non-draft
+// submission, and no submission in range is still waiting on clarification or rejected.
+export function timesheetGaps(cid, from, to) {
+  const days = [...new Set(billable(entriesIn(new Set([cid]), from, to)).map(e => e.work_date))].sort();
+  const subs = S.submissions.filter(s => s.contract_id === cid && s.status !== 'Draft');
+  const unsubmitted = days.filter(d => !subs.some(s => C.inRange(d, s.period_start, s.period_end)));
+  const unresolved = subs.filter(s => C.rangesOverlap(s.period_start, s.period_end, from, to) && ['Rejected', 'Clarification requested'].includes(s.status));
+  return { unsubmitted, unresolved, ok: !unsubmitted.length && !unresolved.length };
 }
 
 // Per-day per-contract evidence completeness (an organisational aid, not a proof score).

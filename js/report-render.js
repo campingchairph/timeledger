@@ -46,7 +46,7 @@ export function buildReport({ type, scope, from, to }) {
   const earn = M.earnings(apps);
   const logged = M.loggedMinutes(entries);
   const submitted = M.sumCenti(subs, 'submitted_hours');
-  const invs = S.invoices.filter(i => cids.has(i.contract_id) && i.status !== 'Credited' && i.status !== 'Draft' && C.inRange(i.invoice_date, from, to));
+  const invs = S.invoices.filter(i => cids.has(i.contract_id) && C.invoiceIssued(i) && C.inRange(i.invoice_date, from, to));
   const invoiced = {}, paid = {};
   for (const i of invs) { C.addTo(invoiced, i.currency, C.invoiceTotal(i)); C.addTo(paid, i.currency, C.invoicePaid(i, S.payments)); }
   const outstanding = {};
@@ -265,10 +265,12 @@ export function printInvoice(inv) {
   ] };
   const report = {
     title: `Invoice ${inv.invoice_number}`, from: inv.period_start, to: inv.period_end, contracts: c ? [c] : [], generated_at_utc: new Date().toISOString(),
-    summary: [['Invoice date', C.fmtDate(inv.invoice_date)], ['Payment terms', c?.payment_terms_text || ''], ['Due (estimate)', inv.due_date ? C.fmtDate(inv.due_date) : ''], ['Currency', inv.currency], ['Total due', C.fmtMoney(C.invoiceTotal(inv), inv.currency)]].filter(r => r[1]),
+    summary: [
+      ...(inv.po_number || c?.po_required ? [['PO number', inv.po_number || 'MISSING — do not send']] : []),
+      ['Invoice date', C.fmtDate(inv.invoice_date)], ['Payment terms', c?.payment_terms_text || ''], ['Due (estimate)', inv.due_date ? C.fmtDate(inv.due_date) : ''], ['Currency', inv.currency], ['Total due', C.fmtMoney(C.invoiceTotal(inv), inv.currency)]].filter(r => r[1]),
     sections: [section], notes: [c?.invoice_requirements ? `Supporting detailed timesheets available on request (${c.invoice_requirements}).` : '', inv.notes || ''].filter(Boolean),
   };
-  const hd = { client_name: bt.name, client_contact: bt.contact, client_address: bt.address, client_email: bt.email, reference: bt.reference, client_logo: e?.logo, accent: e?.accent,
+  const hd = { client_name: bt.name, client_contact: bt.contact, client_address: bt.address, client_email: bt.email, reference: [inv.po_number && `PO ${inv.po_number}`, bt.reference].filter(Boolean).join(' · '), client_logo: e?.logo, accent: e?.accent,
     freelancer_name: p.full_name, freelancer_address: p.address, freelancer_email: p.email, freelancer_phone: p.phone, freelancer_tax_id: p.tax_id, freelancer_logo: p.logo };
   printHtml(reportHtml(report, hd), `Invoice ${inv.invoice_number}`);
 }

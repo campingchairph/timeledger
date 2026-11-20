@@ -5,6 +5,7 @@ import * as M from '../metrics.js';
 import { rateFor } from '../fx.js';
 import * as A from '../actions.js';
 import { fmtDateTime, partsIn } from '../tz.js';
+import { monthEndTasks } from './invoices.js';
 
 let period = 'month';
 
@@ -98,6 +99,8 @@ export function render(el) {
         <p>${new Date(C.dateToMs(t)).toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'long', timeZone: 'UTC' })} · ${contracts.length} active contract${contracts.length === 1 ? '' : 's'}</p></div>
       <div class="btn-row"><button class="btn" data-go="timer">${raw('<svg viewBox="0 0 24 24"><path d="M7 4.5v15l12-7.5z"/></svg>')} Start timer</button><button class="btn accent" data-go="log">Log time</button></div>
     </div>
+
+    ${monthEndTasks(cids, t).map(task => h`<a class="nudge" href="#/invoices"><i></i><span><b>Month-end · ${new Date(C.dateToMs(task.month.from)).toLocaleDateString('en-GB', { month: 'long', timeZone: 'UTC' })}</b> — ${employerName(get('employers', task.contract.employer_id))}: ${task.invoice ? `invoice ${task.invoice.invoice_number}: ${task.invoice.status}` : `${C.fmtCenti(task.leftCenti)} approved to invoice`}${task.contract.preinvoice_contact_name && !task.invoice?.confirmation_sent_at ? `. Confirm with ${task.contract.preinvoice_contact_name.split(' ')[0]} first.` : ''}</span>→</a>`)}
 
     <div class="hero-row">
       <section class="hero-card" aria-label="Earnings">

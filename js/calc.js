@@ -174,6 +174,31 @@ export const pendingDifference = (submittedCenti, approvedCenti) => ({
 });
 
 export const invoiceCountsAsBilled = inv => inv.status !== 'Credited';
+// Statuses before the invoice is actually issued to the client (pre-approval / PO stage).
+export const PRE_ISSUE = new Set(['Draft', 'Awaiting PO', 'PO received']);
+export const invoiceIssued = inv => !PRE_ISSUE.has(inv.status) && inv.status !== 'Credited';
+
+// PO format mask: '#' = digit, 'A' = letter, anything else literal. 'ABC######' accepts 'ABC123456' only —
+// no spaces, no lowercase, no extra characters (clients often auto-read these).
+export function poMatches(mask, value) {
+  if (!mask) return true;
+  if (typeof value !== 'string' || value.length !== mask.length) return false;
+  for (let i = 0; i < mask.length; i++) {
+    const m = mask[i], c = value[i];
+    if (m === '#' ? !/[0-9]/.test(c) : m === 'A' ? !/[A-Z]/.test(c) : c !== m) return false;
+  }
+  return true;
+}
+export const poExample = mask => (mask || '').replace(/#/g, (_, i) => String((i % 9) + 1)).replace(/A/g, 'X');
+
+// Month-end window: the last `before` days of a month and the first `after` days of the next.
+// Returns the calendar month being closed, or null outside the window.
+export function monthEndDue(d, before = 3, after = 7) {
+  const cur = monthRange(d);
+  if (daysBetween(d, cur.to) < before) return cur;
+  if (+d.slice(8, 10) <= after) return monthRange(addDays(cur.from, -1));
+  return null;
+}
 
 // Centihours already allocated per approval (credited invoices release their hours).
 export function allocatedByApproval(allocations, invoicesById) {
@@ -192,7 +217,7 @@ export const invoicePaid = (inv, payments) =>
 export const invoiceOutstanding = (inv, payments) => invoiceTotal(inv) - invoicePaid(inv, payments);
 
 export function invoiceStatus(inv, payments, today) {
-  if (['Draft', 'Credited', 'Disputed'].includes(inv.status)) return inv.status;
+  if (PRE_ISSUE.has(inv.status) || ['Credited', 'Disputed'].includes(inv.status)) return inv.status;
   const paid = invoicePaid(inv, payments), total = invoiceTotal(inv);
   if (total > 0 && paid >= total) return 'Paid';
   if (inv.due_date && today > inv.due_date) return 'Overdue';

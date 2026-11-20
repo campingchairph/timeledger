@@ -118,6 +118,36 @@ test('invoice outstanding and status with partial payments', () => {
   assert.equal(C.invoiceStatus(inv, [...pays, { invoice_id: 'i1', amount_minor: 16000 }], '2026-12-02'), 'Paid');
 });
 
+test('PO numbers must match the contract mask exactly', () => {
+  const mask = 'XYZ######';
+  assert.equal(C.poMatches(mask, 'XYZ123456'), true);
+  assert.equal(C.poMatches(mask, 'XYZ 123456'), false);
+  assert.equal(C.poMatches(mask, 'xyz123456'), false);
+  assert.equal(C.poMatches(mask, 'XYZ12345'), false);
+  assert.equal(C.poMatches(mask, 'XYZ1234567'), false);
+  assert.equal(C.poMatches(mask, 'XYZ12345A'), false);
+  assert.equal(C.poMatches('', 'anything'), true);
+  assert.equal(C.poMatches('PO-AA##', 'PO-QZ07'), true);
+  assert.equal(C.poExample('XYZ######'), 'XYZ456789');
+});
+
+test('pre-issue invoices are not billed, overdue or paid yet', () => {
+  for (const status of ['Draft', 'Awaiting PO', 'PO received']) {
+    const inv = { id: 'i', status, subtotal_minor: 100, due_date: '2026-01-01' };
+    assert.equal(C.invoiceIssued(inv), false);
+    assert.equal(C.invoiceStatus(inv, [], '2027-01-01'), status);
+  }
+  assert.equal(C.invoiceIssued({ status: 'Sent' }), true);
+  assert.equal(C.invoiceIssued({ status: 'Credited' }), false);
+});
+
+test('month-end window', () => {
+  assert.deepEqual(C.monthEndDue('2026-11-28'), { from: '2026-11-01', to: '2026-11-30' });
+  assert.deepEqual(C.monthEndDue('2026-12-03'), { from: '2026-11-01', to: '2026-11-30' });
+  assert.equal(C.monthEndDue('2026-11-20'), null);
+  assert.deepEqual(C.monthEndDue('2027-01-02'), { from: '2026-12-01', to: '2026-12-31' });
+});
+
 test('FX conversion is an estimate and never invents a rate', () => {
   assert.equal(C.convertMinor(26250, 74.123), 1945729);
   assert.equal(C.convertMinor(26250, null), null);

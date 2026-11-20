@@ -149,6 +149,15 @@ async function contractForm(existing, employerId) {
     { name: 'daily_cap_hours', label: 'Optional per-contract daily cap (hours)', type: 'hours', hint: 'Personal limit only — never a contractual guarantee.' },
     { name: 'reporting_anchor_date', label: '14-day reporting anchor (optional)', type: 'date' },
     { name: 'end_behavior_text', label: 'End behaviour', type: 'textarea', rows: 2, full: true },
+    { name: 'h_inv', type: 'html', html: h`<h3 class="mt">Invoicing process</h3><p class="small muted">The client's rules for getting an invoice paid. TimeLedger walks you through these steps for each invoice.</p>` },
+    { name: 'invoice_cycle', label: 'Invoice cycle', type: 'select', options: [['', 'No fixed cycle'], ['monthly', 'Each calendar month'], ['period14', '14-day periods']] },
+    { name: 'invoice_send_to', label: 'Send invoices ONLY to', type: 'email', hint: 'The single address invoices go to. Anything else is blocked.' },
+    { name: 'preinvoice_contact_name', label: 'Confirm hours & amount first with', hint: 'Leave empty if no pre-invoice confirmation is needed.' },
+    { name: 'preinvoice_contact_email', label: 'Their email', type: 'email' },
+    { name: 'po_required', label: 'A PO number is required on every invoice', type: 'checkbox' },
+    { name: 'po_mask', label: 'PO number format', placeholder: 'e.g. ABC######', hint: '# = digit, A = letter, anything else must match exactly. No spaces.' },
+    { name: 'require_timesheets', label: 'Timesheets must be up to date before invoicing', type: 'checkbox', full: true },
+    { name: 'invoice_process_notes', label: 'Process notes', type: 'textarea', rows: 3, full: true },
   ];
   const values = existing ? { ...existing, daily_cap_hours: existing.daily_availability_limit_minutes ? C.hundredthsToString(C.minutesToCenti(existing.daily_availability_limit_minutes)) : '' }
     : { status: 'active', start_date: today(), currency: emp?.default_currency, primary_timezone: p?.home_timezone, secondary_timezone: emp?.default_timezone !== p?.home_timezone ? emp?.default_timezone : '', approval_contact_name: emp?.primary_contact_name };
@@ -162,6 +171,9 @@ async function contractForm(existing, employerId) {
       rest.daily_availability_limit_minutes = daily_cap_hours ? C.centiToMinutes(C.toCenti(daily_cap_hours)) : null;
       rest.end_date ||= null; rest.reporting_anchor_date ||= null;
       if (!existing && !(C.toMinor(hourly_rate) > 0)) throw new Error('Enter an hourly rate.');
+      rest.po_mask = (rest.po_mask || '').replace(/\s+/g, '').toUpperCase();
+      if (rest.po_required && !rest.po_mask) throw new Error('Enter the PO number format, or untick "PO number required".');
+      if (rest.preinvoice_contact_name && !rest.preinvoice_contact_email) throw new Error('Add an email for the pre-invoice confirmation contact.');
       const con = await save('contracts', { ...rest, id: existing?.id, employer_id: emp.id });
       if (!existing) await save('rates', { contract_id: con.id, hourly_rate: C.hundredthsToString(C.toMinor(hourly_rate)), currency: con.currency, effective_from: con.start_date, effective_to: null, notes: 'Initial rate' });
       if (existing && existing.currency !== con.currency) toast('Currency changed — add a new effective-dated rate in that currency.', 'warn', 6000);

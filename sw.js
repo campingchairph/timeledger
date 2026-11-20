@@ -1,6 +1,6 @@
 // Offline-first service worker: precache the app shell, then serve from cache and
 // refresh in the background (stale-while-revalidate). Bump VERSION on each release.
-const VERSION = 'tl-v2';
+const VERSION = 'tl-v3';
 const FONT_HOSTS = ['fonts.googleapis.com', 'fonts.gstatic.com'];
 const SHELL = [
   './', 'index.html', 'css/app.css', 'manifest.webmanifest', 'icon.svg', 'icon-192.png',

@@ -2,6 +2,27 @@
 // onboarding sheet asks the user to confirm or edit them. This file is the ONLY
 // place employer-specific values may appear in the codebase.
 
+const SEED_EMPLOYER = 'Emperor Design Consultants Limited';
+const INVOICING = {
+  invoice_cycle: 'monthly', invoice_send_to: 'invoices@emperor.works',
+  preinvoice_contact_name: 'Jenny Rehling', preinvoice_contact_email: 'jenny.rehling@emperor.works',
+  po_required: true, po_mask: 'EMP######', require_timesheets: true,
+  invoice_process_notes: 'At the end of each calendar month, email Jen to confirm the hours and amount; she checks them and issues a PO number. Put the PO on every invoice exactly as EMP123456 (no spaces — it is auto-read). Send invoices only to the invoices address, never via anyone else, and never before Jen has confirmed. All timesheets must be up to date.',
+};
+
+// One-time updates for installs seeded by an earlier version. Each runs once (tracked in meta)
+// and only fills fields that are still empty, so user edits are never overwritten.
+export const SEED_UPGRADES = [{
+  id: 'upgrade-2026-11-invoicing-process',
+  reason: 'Client invoicing process added (app update)',
+  apply: S => {
+    const emp = S.employers.find(e => e.legal_name === SEED_EMPLOYER);
+    if (!emp) return [];
+    return S.contracts.filter(c => c.employer_id === emp.id && !c.invoice_cycle && !c.invoice_send_to && !c.po_mask)
+      .map(c => ['contracts', { id: c.id, ...INVOICING }]);
+  },
+}];
+
 export function seedRecords(uid, now) {
   const employerId = uid(), contractId = uid();
   const stamp = { created_at: now, updated_at: now };
@@ -12,7 +33,7 @@ export function seedRecords(uid, now) {
       logo: '', ...stamp,
     }],
     employers: [{
-      id: employerId, legal_name: 'Emperor Design Consultants Limited', display_name: 'Emperor', address: '',
+      id: employerId, legal_name: SEED_EMPLOYER, display_name: 'Emperor', address: '',
       registration_number: '', tax_number: '', primary_contact_name: 'Kellie Evans', primary_contact_role: '',
       primary_contact_email: '', billing_contact_name: '', billing_contact_email: '', logo: '',
       default_currency: 'GBP', default_timezone: 'Europe/London', invoice_prefix: 'EMP-', invoice_next_seq: 1,
@@ -26,7 +47,8 @@ export function seedRecords(uid, now) {
       invoice_requirements: 'Detailed timesheets',
       payment_terms_text: 'Whenever possible within 14 working days of receipt', payment_terms_working_days: 14,
       end_behavior_text: 'Automatically ends 31 May 2027 unless ended earlier under the agreement',
-      daily_availability_limit_minutes: null, reporting_anchor_date: '2026-11-09', status: 'active', ...stamp,
+      daily_availability_limit_minutes: null, reporting_anchor_date: '2026-11-09', status: 'active',
+      ...INVOICING, ...stamp,
     }],
     rates: [{
       id: uid(), contract_id: contractId, hourly_rate: '25.00', currency: 'GBP', effective_from: '2026-11-09',

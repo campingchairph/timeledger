@@ -3,7 +3,7 @@
 // audit and notify listeners.
 
 import * as db from './db.js';
-import { seedRecords } from './seed.js';
+import { seedRecords, SEED_UPGRADES } from './seed.js';
 import { dateIn } from './tz.js';
 
 export const S = {};
@@ -38,6 +38,12 @@ export async function init() {
     S.meta.push(s); await db.put('meta', s);
   }
   index.clear();
+  for (const u of SEED_UPGRADES) {
+    if (S.meta.some(m => m.id === u.id)) continue;
+    for (const [table, rec] of u.apply(S)) await save(table, rec, { reason: u.reason });
+    const flag = { id: u.id, at: nowIso() };
+    S.meta.push(flag); await db.put('meta', flag);
+  }
 }
 
 // ---------- reads ----------

@@ -45,6 +45,7 @@ Push to `main` — GitHub Pages serves the repository root. After changing any a
 - **Log time** in the *Daily Journal* or with the *Timer* (the timer survives refreshes and only ever creates logged time).
 - **Record approvals** under *Approved Hours*. Corrections require a reason and keep the previous value. Duplicate approvals for the same contract + period are blocked unless marked as an adjustment.
 - **Invoices** are built from approved hours not yet allocated, so nothing is invoiced twice. Crediting an invoice releases its hours. Payments can be partial.
+- **Client invoicing process** (per contract, under *Edit contract → Invoicing process*): billing cycle, a contact to confirm hours/amount with before invoicing, a required PO number with an exact format mask (`#` digit, `A` letter), the only address invoices may be sent to, and whether timesheets must be up to date. Each invoice then shows a step checklist — timesheets → confirm (pre-written email) → PO → send — and can't be marked sent until the steps are done. Monthly contracts get a month-end reminder on the dashboard and Invoices page. Statuses before sending (*Draft*, *Awaiting PO*, *PO received*) never count as invoiced.
 - **Archive, don't delete.** Archived employers/contracts leave the pickers but keep every record. Hard delete is available with a typed confirmation and a list of linked records.
 
 ## Reports
